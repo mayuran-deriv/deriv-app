@@ -1,10 +1,11 @@
 import React from 'react';
-import { WalletButton, WalletPasswordField, WalletText } from '../../../../components/Base';
+import { WalletButton, WalletText } from '../../../../components/Base';
 import useDevice from '../../../../hooks/useDevice';
 import { TPlatforms } from '../../../../types';
 import { validPassword } from '../../../../utils/password';
 import { PlatformDetails } from '../../constants';
 import './CreatePassword.scss';
+import WalletPasswordFieldLazy from '../../../../components/Base/WalletPasswordField/WalletPasswordFieldLazy';
 
 type TProps = {
     icon: React.ReactNode;
@@ -36,7 +37,7 @@ const CreatePassword: React.FC<TProps> = ({
                 You can use this password for all your {title} accounts.
             </WalletText>
 
-            <WalletPasswordField label={`${title} password`} onChange={onPasswordChange} password={password} />
+            <WalletPasswordFieldLazy label={`${title} password`} onChange={onPasswordChange} password={password} />
             {!isMobile && (
                 <WalletButton
                     disabled={!password || isLoading || !validPassword(password)}
