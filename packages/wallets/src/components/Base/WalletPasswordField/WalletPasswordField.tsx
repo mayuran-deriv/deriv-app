@@ -8,11 +8,7 @@ import './WalletPasswordField.scss';
 import { passwordErrorMessage, passwordRegex, warningMessages } from '../../../constants/password';
 import { zxcvbn, zxcvbnOptions } from '@zxcvbn-ts/core';
 import { dictionary } from '@zxcvbn-ts/language-common';
-
-interface WalletPasswordFieldProps extends WalletTextFieldProps {
-    password: string;
-    shouldDisablePasswordMeter?: boolean;
-}
+import { WalletPasswordFieldProps } from './WalletPasswordFieldLazy';
 
 export const validatePassword = (password: string) => {
     const score = calculateScore(password);
