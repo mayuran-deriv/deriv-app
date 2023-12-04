@@ -1,5 +1,4 @@
-import React, { ComponentProps, InputHTMLAttributes, lazy, Suspense } from 'react';
-import { HelperMessageProps } from '../WalletTextField/HelperMessage';
+import React, { lazy, Suspense } from 'react';
 import { WalletTextFieldProps } from '../WalletTextField/WalletTextField';
 
 export interface WalletPasswordFieldProps extends WalletTextFieldProps {

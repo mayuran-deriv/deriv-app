@@ -1,7 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { Score, calculateScore, validPassword, isPasswordValid, passwordKeys } from '../../../utils/password';
 import { WalletTextField } from '../WalletTextField';
-import { WalletTextFieldProps } from '../WalletTextField/WalletTextField';
 import PasswordMeter from './PasswordMeter';
 import PasswordViewerIcon from './PasswordViewerIcon';
 import './WalletPasswordField.scss';
