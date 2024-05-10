@@ -35,7 +35,6 @@ const TOUR_STATES = {
     UNKNOWN: '',
     REQUESTED: 'requested',
     SWITCHING_WALLET: 'switching_wallet',
-    LOADING: 'loading',
     READY_TO_PLAY: 'ready_to_play',
 };
 
