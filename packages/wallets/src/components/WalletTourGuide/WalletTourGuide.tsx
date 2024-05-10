@@ -23,6 +23,22 @@ import {
 } from './WalletTourGuideSettings';
 import './WalletTourGuide.scss';
 
+/**
+ * to start tour, we need to synchronise multiple sources of data
+ * some of them are event/promise driven like switchAccount()
+ * some of them are side-effect drive (like observing changes in local storage or observing loading states)
+ * pretty hard to make sense out of all of them, so in order to keep track whats going on, added that small state machine
+ * which is effectively driving behaviour of the tour based on specific signals
+ * makes it massively easier to really wait for everything we need to wait for
+ */
+const TOUR_STATES = {
+    UNKNOWN: '',
+    REQUESTED: 'requested',
+    SWITCHING_WALLET: 'switching_wallet',
+    LOADING: 'loading',
+    READY_TO_PLAY: 'ready_to_play',
+};
+
 const WalletTourGuide = () => {
     const [walletsOnboarding, setWalletsOnboarding] = useLocalStorage(key, useReadLocalStorage(key) ?? '');
     const [addMoreWalletsTransformValue, setAddMoreWalletsTransformValue] = useState('');
@@ -30,10 +46,10 @@ const WalletTourGuide = () => {
 
     // just because someone clicked button in dtrader and set local storage
     // does not mean we should run the tour as we might need to wait for the account to be switched
-    const [run, setRun] = useState<boolean>(false);
+    const [run, setRun] = useState(false);
 
     const switchWalletAccount = useWalletAccountSwitcher();
-    const { isFetching, isLoading, isSuccess } = useAuthorize();
+    const { isFetching, isLoading, isSuccess, isSwitching } = useAuthorize();
     const { data: wallets } = useWalletAccountsList();
     const { data: activeWallet } = useActiveWalletAccount();
     const { data: availableWallets } = useAllWalletAccounts();
@@ -43,6 +59,7 @@ const WalletTourGuide = () => {
     const { isLoading: sorteAccountsListLoading } = useSortedMT5Accounts();
 
     const addMoreWalletRef = useRef<HTMLElement | null>(document.getElementById('wallets_add_more_carousel_wrapper'));
+    const tourGuideStateRef = useRef(TOUR_STATES.UNKNOWN);
 
     const fiatWalletLoginId = getFiatWalletLoginId(wallets);
     const walletIndex = getWalletIndexForTarget(fiatWalletLoginId, wallets);
@@ -54,6 +71,9 @@ const WalletTourGuide = () => {
     );
     const hasDerivAppsTradingAccount = Boolean(activeWallet?.dtrade_loginid);
     const isAllWalletsAlreadyAdded = Boolean(availableWallets?.every(wallet => wallet.is_added));
+
+    const isAnythingLoading =
+        dxtradeIsLoading || ctraderIsLoading || isFetching || !isSuccess || isLoading || sorteAccountsListLoading;
 
     const callbackHandle = (data: CallBackProps) => {
         const { action, index, lifecycle } = data;
@@ -74,35 +94,62 @@ const WalletTourGuide = () => {
         }
     };
 
+    // that effect is there only to establish if we even want to start the tour
     useEffect(() => {
-        const needToStart = walletsOnboarding === START_VALUE;
-        if (needToStart) {
-            const isAnythingLoading =
-                dxtradeIsLoading ||
-                ctraderIsLoading ||
-                isFetching ||
-                !isSuccess ||
-                isLoading ||
-                sorteAccountsListLoading;
-            if (fiatWalletLoginId && fiatWalletLoginId !== activeWalletLoginId) {
-                switchWalletAccount(fiatWalletLoginId);
-            } else if (needToStart && !isAnythingLoading) {
-                setRun(true);
-                setWalletsOnboarding('');
-            }
+        const startRequested = walletsOnboarding === START_VALUE;
+
+        // do nothing if we don't need to start
+        if (!startRequested) {
+            return;
         }
-    }, [
-        activeWalletLoginId,
-        fiatWalletLoginId,
-        switchWalletAccount,
-        walletsOnboarding,
-        isLoading,
-        isFetching,
-        isSuccess,
-        dxtradeIsLoading,
-        ctraderIsLoading,
-        sorteAccountsListLoading,
-    ]);
+
+        // if we are in the middle of something, just reject the start request,
+        // its acceptable UI for the button to not work while app is loading
+        if (isAnythingLoading) {
+            return;
+        }
+
+        // we established that we need to start and nothing is loading, so we can start
+        // and clean the loacl storage so we don't start again
+        tourGuideStateRef.current = TOUR_STATES.REQUESTED;
+        setRun(false);
+        setWalletsOnboarding('');
+    }, [walletsOnboarding, isAnythingLoading]);
+
+    // that effect is there to handle the account switching
+    useEffect(() => {
+        // do nothing if we haven't requested the start
+        if (tourGuideStateRef.current !== TOUR_STATES.REQUESTED) {
+            return;
+        }
+
+        // check if we need to switch the account
+        if (fiatWalletLoginId && fiatWalletLoginId !== activeWalletLoginId) {
+            tourGuideStateRef.current = TOUR_STATES.SWITCHING_WALLET;
+            switchWalletAccount(fiatWalletLoginId).then(() => {
+                // once wallet is switched, we just wait for stuff to be loaded
+                tourGuideStateRef.current = TOUR_STATES.READY_TO_PLAY;
+            });
+        } else {
+            // no need to switch wallet, we can go straight to loading
+            tourGuideStateRef.current = TOUR_STATES.READY_TO_PLAY;
+        }
+    }, [activeWalletLoginId, fiatWalletLoginId, tourGuideStateRef.current, switchWalletAccount]);
+
+    // that effect is there to actually start the tour once everything is loaded
+    useEffect(() => {
+        // do nothing if we are not in loading state
+        if (tourGuideStateRef.current !== TOUR_STATES.READY_TO_PLAY) {
+            return;
+        }
+
+        // we are ready to play, so we can start the tour
+        if (!isAnythingLoading) {
+            setRun(true);
+            tourGuideStateRef.current = TOUR_STATES.UNKNOWN;
+            setWalletsOnboarding('');
+        }
+    }, [isAnythingLoading, tourGuideStateRef.current]);
 
     useEffect(() => {
         if (!addMoreWalletRef.current) {
