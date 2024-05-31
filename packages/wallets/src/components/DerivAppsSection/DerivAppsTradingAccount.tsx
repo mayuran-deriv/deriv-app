@@ -4,7 +4,6 @@ import {
     useActiveLinkedToTradingAccount,
     useActiveWalletAccount,
     useBalanceSubscription,
-    useBalance,
     useAuthorize,
 } from '@deriv/api-v2';
 import { LabelPairedArrowsRotateSmBoldIcon, LabelPairedArrowUpArrowDownSmBoldIcon } from '@deriv/quill-icons';
@@ -17,10 +16,9 @@ import { displayMoney } from '@deriv/api-v2/src/utils';
 const DerivAppsTradingAccount: React.FC = () => {
     const { isMobile } = useDevice();
     const history = useHistory();
-    const { isLoading } = useBalance();
     const { data: activeWallet } = useActiveWalletAccount();
     const { data: activeLinkedToTradingAccount } = useActiveLinkedToTradingAccount();
-    const { data: balanceData, subscribe, unsubscribe } = useBalanceSubscription();
+    const { data: balanceData, isLoading, subscribe, unsubscribe } = useBalanceSubscription();
     const { data: authData } = useAuthorize();
 
     useEffect(() => {
@@ -33,7 +31,7 @@ const DerivAppsTradingAccount: React.FC = () => {
         return () => {
             unsubscribe();
         };
-    }, [activeLinkedToTradingAccount, subscribe]);
+    }, [activeLinkedToTradingAccount, subscribe, unsubscribe]);
 
     const linkedAccountCurrencyCode = activeLinkedToTradingAccount?.currency_config?.display_code;
     const linkedAccountPreferredLanguage = authData?.preferred_language;
@@ -52,11 +50,14 @@ const DerivAppsTradingAccount: React.FC = () => {
     }
 
     return (
-        <div className='wallets-deriv-apps-section wallets-deriv-apps-section__border'>
+        <div
+            className='wallets-deriv-apps-section wallets-deriv-apps-section__border'
+            data-testid='dt_apps_trading_account'
+        >
             <div className={isMobile ? 'wallets-deriv-apps-section__icon-small' : 'wallets-deriv-apps-section__icon'}>
                 <WalletMarketIcon icon='IcWalletOptionsLight' size={isMobile ? 'md' : 'lg'} />
             </div>
-            <div className='wallets-deriv-apps-section__details'>
+            <div className='wallets-deriv-apps-section__details' data-testid='dt_apps_trading_account_balance'>
                 <div className='wallets-deriv-apps-section__title-and-badge'>
                     <WalletText size='sm'>Options</WalletText>
                     <WalletListCardBadge isDemo={activeWallet?.is_virtual} label={activeWallet?.landing_company_name} />
