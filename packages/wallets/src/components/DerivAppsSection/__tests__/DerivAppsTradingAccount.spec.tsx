@@ -1,3 +1,4 @@
+import React from 'react';
 import { APIProvider, useBalanceSubscription } from '@deriv/api-v2';
 import { act, render, screen } from '@testing-library/react';
 import WalletsAuthProvider from '../../../AuthProvider';
