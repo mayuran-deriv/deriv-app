@@ -76,7 +76,7 @@ jobs:
             owner: 'regentmarkets',
             repo: 'e2e-deriv-app',
             workflow_id: 'E2E_Run_PR.yml',
-            ref: 'meeyun/fix_ws_appid',
+            ref: 'mark/pr-commit-v2',
             inputs: workflowInputs
           });
           console.log('Workflow dispatched successfully:', response);
