@@ -25,18 +25,21 @@ on:
         options:
         - https://deriv-app-git-fork-maryia-matskevich-deriv-maryia-bot-1913.binary.sx/
         - https://deriv-app-git-fork-suisin-deriv-suisin-upm1116addkhmerlanguage.binary.sx
+        - https://deriv-app-git-fork-meeyun-deriv-meeyun-playground.binary.sx/
       iissue_number:
         type: choice
         description: Issue Number
         options:
         - '15719'
         - '15714'
+        - '24045'
       iuser_name:
         type: choice
         description: User name
         options:
         - maryia-deriv
         - suisin-deriv
+        - meeyun-deriv
 
 jobs:
   trigger-workflow:
@@ -73,7 +76,7 @@ jobs:
             owner: 'regentmarkets',
             repo: 'e2e-deriv-app',
             workflow_id: 'E2E_Run_PR.yml',
-            ref: 'mark/pr-commit-v2',
+            ref: 'meeyun/fix_ws_appid',
             inputs: workflowInputs
           });
           console.log('Workflow dispatched successfully:', response);
